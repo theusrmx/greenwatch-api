@@ -34,11 +34,17 @@ class DBDataModel(Base):
     data = Column(DateTime, default=get_utc_minus_3, onupdate=get_utc_minus_3)
 
 # Model de informações
-class SensorData(BaseModel):
-    id: Optional[int]
+# Modelo de entrada (POST)
+class SensorDataCreate(BaseModel):
     umidade: float
     temperatura: float
-    data: Optional[datetime]
+
+# Modelo de resposta (GET)
+class SensorData(BaseModel):
+    id: int
+    umidade: float
+    temperatura: float
+    data: datetime
 
     class Config:
         orm_mode = True
@@ -57,13 +63,13 @@ def get_db():
 def home():
   return 'GreenWatch'
 
-@app.get("/sensor_api", response_model=List[SensorData])
+@app.get("/get_dados", response_model=List[SensorData])
 def read_sensor_data(db: Session = Depends(get_db)):
     data = db.query(DBDataModel).all()
     return data
 
-@app.post("/sensor_api", response_model=SensorData, status_code=status.HTTP_201_CREATED)
-def create_sensor_data(data: SensorData, db: Session = Depends(get_db)):
+@app.post("/post_dados", response_model=SensorData, status_code=status.HTTP_201_CREATED)
+def create_sensor_data(data: SensorDataCreate, db: Session = Depends(get_db)):
     db_data = DBDataModel(**data.dict(exclude_unset=True))
     db.add(db_data)
     db.commit()
